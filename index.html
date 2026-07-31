@@ -242,6 +242,13 @@ body{
     <!-- Style -->
     <div class="form-section">
       <h3><span class="icon">🎨</span> 样式设置</h3>
+      <div class="field" style="margin-bottom:12px;">
+        <label>字体相对大小（缩放所有文字）</label>
+        <div class="range-field">
+          <input type="range" min="80" max="160" value="100" data-field="fontScale" oninput="updateRangePercent(this)">
+          <span class="val" id="fontScaleVal">100%</span>
+        </div>
+      </div>
       <div class="color-row">
         <div class="color-field"><label>主色调</label><input type="color" data-field="accentColor" value="#2F72B8"></div>
         <div class="color-field"><label>深色调</label><input type="color" data-field="navyColor" value="#123A63"></div>
@@ -340,7 +347,8 @@ var DEFAULT_STATE = {
   companyCN: '拓贸通（天津）国际贸易有限公司',
   companyEN: 'TOOMOTOO (TIANJIN) INTERNATIONAL TRADING CO.,LTD',
   accentColor: '#2F72B8',
-  navyColor: '#123A63'
+  navyColor: '#123A63',
+  fontScale: 100
 };
 
 var state = JSON.parse(JSON.stringify(DEFAULT_STATE));
@@ -390,8 +398,8 @@ function populateForm(){
     if(el.type==='checkbox'){
       el.checked=!!state[key];
     }else if(el.type==='range'){
-      el.value=state[key]||80;
-      updateRange(el);
+      el.value=state[key]||(key==='fontScale'?100:80);
+      if(key==='fontScale') updateRangePercent(el); else updateRange(el);
     }else{
       el.value=state[key]||'';
     }
@@ -406,7 +414,7 @@ function bindForm(){
     var evt=el.type==='range'?'input':(el.type==='checkbox'?'change':'input');
     el.addEventListener(evt,function(){
       if(el.type==='checkbox') state[key]=el.checked;
-      else if(el.type==='range'){state[key]=parseInt(el.value);updateRange(el);}
+      else if(el.type==='range'){state[key]=parseInt(el.value);if(key==='fontScale') updateRangePercent(el); else updateRange(el);}
       else state[key]=el.value;
       updatePreview(); updateSender(); saveState();
     });
@@ -416,6 +424,11 @@ function bindForm(){
 function updateRange(el){
   var valEl=document.getElementById(el.dataset.field+'Val');
   if(valEl) valEl.textContent=el.value+'px';
+}
+
+function updateRangePercent(el){
+  var valEl=document.getElementById(el.dataset.field+'Val');
+  if(valEl) valEl.textContent=el.value+'%';
 }
 
 function updateSender(){
@@ -479,6 +492,7 @@ function updateImagePreviews(){
 // ===== Signature Generation =====
 function generateSigA(){
   var a=state.accentColor, n=state.navyColor;
+  var fs=(state.fontScale||100)/100;
   var avatarHtml='';
   if(state.avatar){
     var sz=state.avatarSize||80;
@@ -503,14 +517,14 @@ function generateSigA(){
     '  <tr>\n'+
     '    <td valign="top" style="padding:0 16px 0 0;border-right:2px solid '+a+';">\n'+
     (logoHtml?'      '+logoHtml+'\n':'')+
-    (state.companyCN?'      <div style="font-size:10px;font-weight:bold;color:'+n+';padding-top:6px;">'+esc(state.companyCN)+'</div>\n':'')+
-    (state.companyEN?'      <div style="font-size:8px;color:#7A8AA0;padding-top:2px;letter-spacing:.2px;">'+esc(state.companyEN)+'</div>\n':'')+
+    (state.companyCN?'      <div style="font-size:'+(10*fs).toFixed(1)+'px;font-weight:bold;color:'+n+';padding-top:6px;">'+esc(state.companyCN)+'</div>\n':'')+
+    (state.companyEN?'      <div style="font-size:'+(8*fs).toFixed(1)+'px;color:#7A8AA0;padding-top:2px;letter-spacing:.2px;">'+esc(state.companyEN)+'</div>\n':'')+
     (avatarHtml?'      '+avatarHtml+'\n':'')+
     '    </td>\n'+
     '    <td valign="top" style="padding:0 0 0 16px;font-family:Arial,Helvetica,sans-serif;">\n'+
-    (state.name?'      <div style="font-size:17px;font-weight:bold;color:'+n+';line-height:1.2;">'+esc(state.name)+'</div>\n':'')+
-    (titleDept?'      <div style="font-size:11px;color:'+a+';padding:2px 0 8px 0;">'+titleDept+'</div>\n':'')+
-    '      <div style="font-size:11px;color:#3D4A5C;line-height:1.8;">\n'+
+    (state.name?'      <div style="font-size:'+(17*fs).toFixed(1)+'px;font-weight:bold;color:'+n+';line-height:1.2;">'+esc(state.name)+'</div>\n':'')+
+    (titleDept?'      <div style="font-size:'+(11*fs).toFixed(1)+'px;color:'+a+';padding:2px 0 8px 0;">'+titleDept+'</div>\n':'')+
+    '      <div style="font-size:'+(11*fs).toFixed(1)+'px;color:#3D4A5C;line-height:1.8;">\n'+
     '        '+contactLines+'\n'+
     '      </div>\n'+
     '    </td>\n'+
@@ -520,14 +534,15 @@ function generateSigA(){
 
 function generateSigB(){
   var a=state.accentColor, n=state.navyColor;
+  var fs=(state.fontScale||100)/100;
   var lines=[];
   var titleDept=esc(state.title);
   if(state.department) titleDept+=' | '+esc(state.department);
 
-  if(state.name) lines.push('<strong style="color:'+n+';font-size:15px;">'+esc(state.name)+'</strong>');
-  if(titleDept) lines.push('<span style="color:'+a+';font-size:12px;">'+titleDept+'</span>');
-  if(state.companyCN) lines.push('<span style="color:#999;font-size:11px;">'+esc(state.companyCN)+'</span>');
-  if(state.companyEN) lines.push('<span style="color:#aaa;font-size:10px;">'+esc(state.companyEN)+'</span>');
+  if(state.name) lines.push('<strong style="color:'+n+';font-size:'+(15*fs).toFixed(1)+'px;">'+esc(state.name)+'</strong>');
+  if(titleDept) lines.push('<span style="color:'+a+';font-size:'+(12*fs).toFixed(1)+'px;">'+titleDept+'</span>');
+  if(state.companyCN) lines.push('<span style="color:#999;font-size:'+(11*fs).toFixed(1)+'px;">'+esc(state.companyCN)+'</span>');
+  if(state.companyEN) lines.push('<span style="color:#aaa;font-size:'+(10*fs).toFixed(1)+'px;">'+esc(state.companyEN)+'</span>');
   if(lines.length>0) lines.push('');
   if(state.mobile) lines.push('<strong style="color:'+a+';">M:</strong> '+esc(state.mobile));
   if(state.email) lines.push('<strong style="color:'+a+';">E:</strong> '+esc(state.email));
@@ -536,7 +551,7 @@ function generateSigB(){
   if(state.address) lines.push('<strong style="color:'+a+';">A:</strong> '+esc(state.address));
 
   return '<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;font-family:Arial,Helvetica,sans-serif;">\n'+
-    '  <tr><td style="padding:8px 0;font-size:12px;color:#3D4A5C;line-height:1.8;">\n'+
+    '  <tr><td style="padding:8px 0;font-size:'+(12*fs).toFixed(1)+'px;color:#3D4A5C;line-height:1.8;">\n'+
     '    '+lines.join('<br>\n    ')+'\n'+
     '  </td></tr>\n</table>';
 }
